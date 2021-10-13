@@ -40,6 +40,7 @@ class PostPagesTests(TestCase):
             description='Тестовое описание',
             slug='test-other_slug'
         )
+
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client(self.user)
