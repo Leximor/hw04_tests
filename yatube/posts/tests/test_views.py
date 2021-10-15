@@ -42,8 +42,7 @@ class PostPagesTests(TestCase):
         )
 
     def setUp(self):
-        self.guest_client = Client()
-        self.authorized_client = Client(self.user)
+        self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_pages_uses_correct_template(self):
@@ -52,9 +51,9 @@ class PostPagesTests(TestCase):
             reverse('about:author'): 'about/author.html',
             reverse('about:tech'): 'about/tech.html',
             reverse('posts:posts_index'): 'posts/index.html',
-            reverse('posts:posts_group', kwargs={'slug': 'test-slug'}):
+            reverse('posts:posts_group', kwargs={'slug': self.group.slug}):
             'posts/group_list.html',
-            reverse('posts:profile', kwargs={'username': 'HasNoName'}):
+            reverse('posts:profile', kwargs={'username': self.user.username}):
             'posts/profile.html',
             reverse('posts:post_detail', kwargs={'post_id': self.post.pk}):
             'posts/post_detail.html',
@@ -71,19 +70,19 @@ class PostPagesTests(TestCase):
         """Проверяем Context страницы index"""
         response = self.authorized_client.get(reverse('posts:posts_index'))
         for post in response.context['page_obj']:
-            self.assertIsInstance(post, Post)
+            self.assertEqual(post.text, str(self.post))
 
     def test_post_posts_groups_page_show_correct_context(self):
         """Проверяем Context страницы posts_groups"""
         response = self.authorized_client.get(
-            reverse('posts:posts_group', kwargs={'slug': 'test-slug'}))
+            reverse('posts:posts_group', kwargs={'slug': self.group.slug}))
         for post in response.context['page_obj']:
             self.assertEqual(post.group, self.group)
 
     def test_post_profile_page_show_correct_context(self):
         """Проверяем Context страницы profile"""
         response = self.authorized_client.get(
-            reverse('posts:profile', kwargs={'username': 'HasNoName'}))
+            reverse('posts:profile', kwargs={'username': self.user.username}))
         for post in response.context['page_obj']:
             self.assertEqual(post.author, self.user)
 
@@ -129,15 +128,15 @@ class PostPagesTests(TestCase):
         в профайле пользователя"""
         new_post = Post.objects.create(
             author=self.user,
-            text='Post text for TEST',
+            text=self.post.text,
             group=self.group
         )
         exp_pages = [
             reverse('posts:posts_index'),
             reverse(
-                'posts:posts_group', kwargs={'slug': 'test-slug'}),
+                'posts:posts_group', kwargs={'slug': self.group.slug}),
             reverse(
-                'posts:profile', kwargs={'username': 'HasNoName'})
+                'posts:profile', kwargs={'username': self.user.username})
         ]
         for rev in exp_pages:
             with self.subTest(rev=rev):
@@ -151,12 +150,12 @@ class PostPagesTests(TestCase):
         для которой не был предназначен."""
         new_post = Post.objects.create(
             author=self.user,
-            text='Post text for TEST',
+            text=self.post.text,
             group=self.group
         )
         response = self.authorized_client.get(
             reverse(
                 'posts:posts_group',
-                kwargs={'slug': 'test-other_slug'})
+                kwargs={'slug': self.other_group.slug})
         )
         self.assertNotIn(new_post, response.context['page_obj'])

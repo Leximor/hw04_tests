@@ -1,3 +1,4 @@
+from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -26,29 +27,28 @@ class PostURLTests(TestCase):
         )
 
     def setUp(self):
-        self.guest_client = Client()
-        self.authorized_client = Client(self.user)
+        self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_kod(self):
         field_urls_code = {
             reverse(
-                'posts:posts_index'): 200,
+                'posts:posts_index'): HTTPStatus.OK,
             reverse(
                 'posts:posts_group',
-                kwargs={'slug': self.group.slug}): 200,
-            '/unexisting_page/': 404,
+                kwargs={'slug': self.group.slug}): HTTPStatus.OK,
+            '/unexisting_page/': HTTPStatus.NOT_FOUND,
         }
         for url, response_code in field_urls_code.items():
             with self.subTest(url=url):
-                status_code = self.guest_client.get(url).status_code
+                status_code = self.client.get(url).status_code
                 self.assertEqual(status_code, response_code)
 
     def test_redirect_if_not_logged_in(self):
         """URL-адрес '/create/' использует перенаправление,
         для неавторизованного пользователя"""
-        response = self.guest_client.get('/create/')
-        self.assertEqual(response.status_code, 302)
+        response = self.client.get('/create/')
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(response, '/accounts/login/')
 
     def test_urls_uses_correct_template(self):
@@ -56,15 +56,15 @@ class PostURLTests(TestCase):
         для неавторизованного пользователя"""
         templates_url_names = {
             '/': 'posts/index.html',
-            '/group/test-slug/': 'posts/group_list.html',
-            '/profile/HasNoName/': 'posts/profile.html',
-            '/posts/2021/': 'posts/post_detail.html',
+            f'/group/{self.group.slug}/': 'posts/group_list.html',
+            f'/profile/{self.user.username}/': 'posts/profile.html',
+            f'/posts/{self.post.pk}/': 'posts/post_detail.html',
             '/about/author/': 'about/author.html',
             '/about/tech/': 'about/tech.html',
         }
         for adress, template in templates_url_names.items():
             with self.subTest(adress=adress):
-                response = self.guest_client.get(adress)
+                response = self.client.get(adress)
                 self.assertTemplateUsed(response, template)
 
     def test_home_url_uses_correct_template(self):

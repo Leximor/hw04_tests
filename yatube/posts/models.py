@@ -47,11 +47,7 @@ class Post(models.Model):
     )
 
     def __str__(self):
-        return (f" {self.text[:20]}, "
-                f"Автор: {self.author.username}, "
-                f"Дата публикации: {self.pub_date:%d.%m.%Y %H:%M} "
-                f"Группа: {self.group}  " '\n'
-                )
+        return self.text[:20]
 
     class Meta:
         verbose_name_plural = 'Посты'

@@ -1,4 +1,3 @@
-
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
@@ -30,16 +29,17 @@ class PaginatorViewsTest(TestCase):
         cache.clear()
 
     def setUp(self):
-        self.guest_client = Client()
-        self.authorized_client = Client(self.user)
+        self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_first_page_contains_ten_records(self):
         """Паджинатор выводит по 10 записей на страницу."""
         reverse_dict_for_paginator_test = [
             reverse('posts:posts_index'),
-            reverse('posts:posts_group', kwargs={'slug': 'test-slug'}),
-            reverse('posts:profile', kwargs={'username': 'HasNoName'})
+            reverse('posts:posts_group', kwargs={
+                    'slug': self.group.slug}),
+            reverse('posts:profile', kwargs={
+                    'username': self.user.username})
         ]
         for reverse_name in reverse_dict_for_paginator_test:
             with self.subTest(reverse_name=reverse_name):
@@ -51,9 +51,11 @@ class PaginatorViewsTest(TestCase):
         reverse_dict_for_paginator_test = [
             reverse('posts:posts_index') + '?page=2',
             reverse(
-                'posts:posts_group', kwargs={'slug': 'test-slug'}) + '?page=2',
+                'posts:posts_group', kwargs={
+                    'slug': self.group.slug}) + '?page=2',
             reverse(
-                'posts:profile', kwargs={'username': 'HasNoName'}) + '?page=2'
+                'posts:profile', kwargs={
+                    'username': self.user.username}) + '?page=2'
         ]
         for reverse_name in reverse_dict_for_paginator_test:
             with self.subTest(reverse_name=reverse_name):
