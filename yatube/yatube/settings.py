@@ -26,10 +26,11 @@ SECRET_KEY = '-$g&@q2ei&1-ok2l!r9-7s1q1dfnn-3$2of0idh3$9niid6o@('
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'testserver',
-    '127.0.0.1',
     'localhost',
-]
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
+] 
 
 
 # Application definition
@@ -130,3 +131,4 @@ LOGIN_REDIRECT_URL = 'posts:posts_index'
 # LOGOUT_REDIRECT_URL = 'users:logout'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'

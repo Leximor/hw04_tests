@@ -23,7 +23,6 @@ class PostURLTests(TestCase):
             author=cls.user,
             text='Тестовый текст',
             group=cls.group,
-            pk='2021'
         )
 
     def setUp(self):

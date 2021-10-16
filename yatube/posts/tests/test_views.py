@@ -26,15 +26,6 @@ class PostPagesTests(TestCase):
             text='Post text for TEST',
             group=cls.group,
         )
-        cls.posts_list = [
-            Post.objects.create(
-                author=cls.user,
-                text='Post text for TEST',
-                group=cls.group
-            )
-            for i in range(15)
-        ]
-        cache.clear()
         cls.other_group = Group.objects.create(
             title='Тестовый заголовок',
             description='Тестовое описание',
@@ -69,8 +60,16 @@ class PostPagesTests(TestCase):
     def test_post_index_page_show_correct_context(self):
         """Проверяем Context страницы index"""
         response = self.authorized_client.get(reverse('posts:posts_index'))
-        for post in response.context['page_obj']:
-            self.assertEqual(post.text, str(self.post))
+        first_object = response.context['page_obj'][0]
+        context_objects = {
+            self.user: first_object.author,
+            self.post.text: first_object.text,
+            self.group: first_object.group,
+            self.post.id: first_object.id,
+        }
+        for reverse_name, response_name in context_objects.items():
+            with self.subTest(reverse_name=reverse_name):
+                self.assertEqual(response_name, reverse_name)
 
     def test_post_posts_groups_page_show_correct_context(self):
         """Проверяем Context страницы posts_groups"""

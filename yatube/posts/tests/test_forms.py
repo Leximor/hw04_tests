@@ -11,6 +11,7 @@ from posts.models import Group, Post
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 User = get_user_model()
+login_create_post = reverse('users:login')
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -43,7 +44,6 @@ class PostCreateFormTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-        self.unauthorized_client = Client()
 
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
@@ -58,28 +58,39 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-
         self.assertRedirects(response, reverse('posts:profile', kwargs={
             'username': self.user}))
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertTrue(Post.objects.latest('id'))
+        last_object = Post.objects.order_by("-id").first()
+        self.assertTrue(
+            Post.objects.filter(
+                id=last_object.id,
+                text=self.post.text,
+                group=self.group.pk,
+            ).exists()
+        )
 
     def test_edit_post(self):
         form_data = {
-            'author': self.post.author,
             'text': self.post.text,
             'group': self.group.pk,
         }
         response = self.authorized_client.post(
-            reverse('posts:post_edit', kwargs={'post_id': self.post.pk}),
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
             data=form_data,
             follow=True
         )
         self.assertRedirects(
             response, reverse(
-                'posts:post_detail', kwargs={'post_id': self.post.pk})
+                'posts:post_detail', kwargs={'post_id': self.post.id})
         )
-        self.assertTrue(self.post)
+        self.assertTrue(
+            Post.objects.filter(
+                id=self.post.id,
+                text=self.post.text,
+                group=self.group.pk,
+            ).exists()
+        )
 
     def test_create_post_guest_client(self):
         """Попытка создания запись от гостевого пользователя"""
@@ -89,17 +100,15 @@ class PostCreateFormTests(TestCase):
             'text': self.post.text,
             'group': self.group.pk,
         }
-        response = self.unauthorized_client.post(
+        response = self.client.post(
             reverse('posts:post_create'),
             data=form_data,
             follow=True
         )
-        login_create_post = reverse('users:login')
         post_create_url = reverse('posts:post_create')
         post_create_redirect = f'{login_create_post}?next={post_create_url}'
 
         self.assertRedirects(response, post_create_redirect)
-        self.assertTrue(self.post)
         self.assertEqual(Post.objects.count(), posts_count)
 
     def test_edit_post_guest_client(self):
@@ -107,17 +116,22 @@ class PostCreateFormTests(TestCase):
             'text': self.post.text,
             'group': self.group.pk,
         }
-        response = self.unauthorized_client.post(
+        response = self.client.post(
             reverse('posts:post_edit', kwargs={'post_id': self.post.pk}),
             data=form_data,
             follow=True
         )
-        login_create_post = reverse('users:login')
         post_edit_url = reverse(
             'posts:post_edit', kwargs={'post_id': self.post.pk}
         )
 
-        post_create_redirect = f'{login_create_post}?next={post_edit_url}'
+        post_edit_redirect = f'{login_create_post}?next={post_edit_url}'
 
-        self.assertRedirects(response, post_create_redirect)
-        self.assertTrue(self.post)
+        self.assertRedirects(response, post_edit_redirect)
+        self.assertTrue(
+            Post.objects.filter(
+                id=self.post.id,
+                text=self.post.text,
+                group=self.group.pk,
+            ).exists()
+        )
