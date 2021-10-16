@@ -117,5 +117,5 @@ class PostCreateFormTests(TestCase):
         post_edit_redirect = f'{login_create_post}?next={post_edit_url}'
         self.assertRedirects(response, post_edit_redirect)
         self.assertEqual(self.group.pk, form_data['group'])
-        self.assertNotEqual(self.text, form_data['text'])
         self.assertEqual(Post.objects.count(), posts_count)
+        self.assertNotEqual(self.post.text, form_data['text'])
