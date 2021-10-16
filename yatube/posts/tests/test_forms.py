@@ -62,13 +62,8 @@ class PostCreateFormTests(TestCase):
             'username': self.user}))
         self.assertEqual(Post.objects.count(), posts_count + 1)
         last_object = Post.objects.order_by("-id").first()
-        self.assertTrue(
-            Post.objects.filter(
-                id=last_object.id,
-                text=self.post.text,
-                group=self.group.pk,
-            ).exists()
-        )
+        self.assertEqual(form_data['text'], last_object.text)
+        self.assertEqual(form_data['group'], last_object.group.pk)
 
     def test_edit_post(self):
         form_data = {
@@ -84,13 +79,8 @@ class PostCreateFormTests(TestCase):
             response, reverse(
                 'posts:post_detail', kwargs={'post_id': self.post.id})
         )
-        self.assertTrue(
-            Post.objects.filter(
-                id=self.post.id,
-                text=self.post.text,
-                group=self.group.pk,
-            ).exists()
-        )
+        self.assertEqual(form_data['text'], self.post.text)
+        self.assertEqual(form_data['group'], self.group.pk)
 
     def test_create_post_guest_client(self):
         """Попытка создания запись от гостевого пользователя"""
@@ -107,13 +97,13 @@ class PostCreateFormTests(TestCase):
         )
         post_create_url = reverse('posts:post_create')
         post_create_redirect = f'{login_create_post}?next={post_create_url}'
-
         self.assertRedirects(response, post_create_redirect)
         self.assertEqual(Post.objects.count(), posts_count)
 
     def test_edit_post_guest_client(self):
+        posts_count = Post.objects.count()
         form_data = {
-            'text': self.post.text,
+            'text': 'Иной новый текст поста',
             'group': self.group.pk,
         }
         response = self.client.post(
@@ -124,14 +114,8 @@ class PostCreateFormTests(TestCase):
         post_edit_url = reverse(
             'posts:post_edit', kwargs={'post_id': self.post.pk}
         )
-
         post_edit_redirect = f'{login_create_post}?next={post_edit_url}'
-
         self.assertRedirects(response, post_edit_redirect)
-        self.assertTrue(
-            Post.objects.filter(
-                id=self.post.id,
-                text=self.post.text,
-                group=self.group.pk,
-            ).exists()
-        )
+        self.assertEqual(self.group.pk, form_data['group'])
+        self.assertNotEqual(self.text, form_data['text'])
+        self.assertEqual(Post.objects.count(), posts_count)
