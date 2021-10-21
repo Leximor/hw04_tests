@@ -149,3 +149,10 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover 
+
+
+# mdeia
+.media
+media/
+Media/
+MEDIA/

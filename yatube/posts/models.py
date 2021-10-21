@@ -45,6 +45,11 @@ class Post(models.Model):
         verbose_name='Группа',
         help_text='Группа, к которой будет относиться пост'
     )
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True
+    )
 
     def __str__(self):
         return self.text[:20]
@@ -53,3 +58,52 @@ class Post(models.Model):
         verbose_name_plural = 'Посты'
         verbose_name = 'Пост'
         ordering = ('-pub_date',)
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.SET_NULL,
+        related_name='comments',
+        blank=True,
+        null=True,
+        verbose_name='Пост',
+        help_text='Пост, к которому будет оставлен комментарий'
+    )
+
+    author = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='comments',
+        blank=True,
+        null=True,
+        verbose_name='Автор комментария',
+    )
+    text = models.TextField(
+        null=True,
+        max_length=400,
+        verbose_name='Текст комментария',
+        help_text='Текст нового комментария',
+    )
+    created = models.DateTimeField(
+        auto_now_add=True, verbose_name='Дата публикации комментария'
+    )
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='follower',
+        blank=True,
+        null=True,
+        verbose_name='Имя подписчика',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name='following',
+        blank=True,
+        null=True,
+        verbose_name='Имя автора',
+    )

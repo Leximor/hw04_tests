@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Вы в Yatube !{% endblock %}
-{% block header %} Добро пожаловать в Yatube ! {% endblock %}
+{% block title %}Вы подписаны на авторов{% endblock %}
+{% block header %} Посты авторов, на которых вы подписаны {% endblock %}
 {% load cache %}
 {% cache 20 index_page %}
   {% block content %}
-  {% include "posts/includes/switcher.html" with index=True %}
+  {% include "posts/includes/switcher.html" with follow=True %}
   {% load thumbnail %}
-    {% for post in page_obj %}
+    {% for post in posts %}
       <ul>
         <li>
           Автор: 
